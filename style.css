@@ -153,6 +153,12 @@ button:active {
 .controls {
   display: flex;
   justify-content: center;
+  gap: 10px;
+}
+
+#muteBtn {
+  padding: 10px 16px;
+  font-size: 18px;
 }
 
 .controls button {

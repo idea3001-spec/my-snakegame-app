@@ -16,6 +16,7 @@ const gameOverOverlay = document.getElementById('gameOverOverlay');
 const startBtn = document.getElementById('startBtn');
 const restartBtn = document.getElementById('restartBtn');
 const pauseBtn = document.getElementById('pauseBtn');
+const muteBtn = document.getElementById('muteBtn');
 const difficultySelect = document.getElementById('difficulty');
 const difficultyRestartSelect = document.getElementById('difficultyRestart');
 const leaderboardList = document.getElementById('leaderboardList');
@@ -24,6 +25,122 @@ const dpadButtons = document.querySelectorAll('.dpad-btn');
 const HISTORY_KEY = 'snakeHistory';
 const HISTORY_LIMIT = 50;
 const SWIPE_THRESHOLD = 20;
+
+const AudioEngine = (() => {
+  let audioCtx = null;
+  let musicGain = null;
+  let sfxGain = null;
+  let musicTimerId = null;
+  let musicStep = 0;
+  let muted = false;
+
+  const MELODY = [
+    392, 440, 494, 523, 494, 440, 392, null,
+    330, 392, 440, null, 349, 392, 440, null,
+  ];
+  const NOTE_DURATION = 0.18;
+
+  function ensureContext() {
+    if (audioCtx) {
+      if (audioCtx.state === 'suspended') audioCtx.resume();
+      return;
+    }
+    const AudioContextClass = window.AudioContext || window.webkitAudioContext;
+    if (!AudioContextClass) return;
+    audioCtx = new AudioContextClass();
+    musicGain = audioCtx.createGain();
+    musicGain.gain.value = muted ? 0 : 0.07;
+    musicGain.connect(audioCtx.destination);
+    sfxGain = audioCtx.createGain();
+    sfxGain.gain.value = muted ? 0 : 0.25;
+    sfxGain.connect(audioCtx.destination);
+  }
+
+  function playTone(freq, duration, type, destination, delay = 0, peak = 1) {
+    if (!audioCtx || muted) return;
+    const startTime = audioCtx.currentTime + delay;
+    const osc = audioCtx.createOscillator();
+    const gain = audioCtx.createGain();
+    osc.type = type;
+    osc.frequency.value = freq;
+    gain.gain.setValueAtTime(0.0001, startTime);
+    gain.gain.linearRampToValueAtTime(peak, startTime + 0.015);
+    gain.gain.exponentialRampToValueAtTime(0.0001, startTime + duration);
+    osc.connect(gain);
+    gain.connect(destination);
+    osc.start(startTime);
+    osc.stop(startTime + duration + 0.03);
+  }
+
+  function playEat() {
+    ensureContext();
+    playTone(880, 0.07, 'square', sfxGain, 0, 0.5);
+    playTone(1318, 0.09, 'square', sfxGain, 0.05, 0.4);
+  }
+
+  function playLevelUp() {
+    ensureContext();
+    [523, 659, 784, 1047].forEach((freq, i) => {
+      playTone(freq, 0.14, 'triangle', sfxGain, i * 0.08, 0.5);
+    });
+  }
+
+  function playGameOver() {
+    ensureContext();
+    [440, 349, 294, 220].forEach((freq, i) => {
+      playTone(freq, 0.28, 'sawtooth', sfxGain, i * 0.14, 0.4);
+    });
+  }
+
+  function playClick() {
+    ensureContext();
+    playTone(600, 0.05, 'square', sfxGain, 0, 0.25);
+  }
+
+  function scheduleMusicStep() {
+    if (!audioCtx || muted) {
+      musicTimerId = null;
+      return;
+    }
+    const note = MELODY[musicStep % MELODY.length];
+    if (note !== null) {
+      playTone(note, NOTE_DURATION * 0.9, 'triangle', musicGain, 0, 0.6);
+    }
+    musicStep++;
+    musicTimerId = setTimeout(scheduleMusicStep, NOTE_DURATION * 1000);
+  }
+
+  function startMusic() {
+    ensureContext();
+    if (musicTimerId || muted || !audioCtx) return;
+    musicStep = 0;
+    scheduleMusicStep();
+  }
+
+  function stopMusic() {
+    if (musicTimerId) clearTimeout(musicTimerId);
+    musicTimerId = null;
+  }
+
+  function setMuted(value) {
+    muted = value;
+    if (musicGain) musicGain.gain.value = muted ? 0 : 0.07;
+    if (sfxGain) sfxGain.gain.value = muted ? 0 : 0.25;
+    if (muted) stopMusic();
+  }
+
+  return {
+    ensureContext,
+    playEat,
+    playLevelUp,
+    playGameOver,
+    playClick,
+    startMusic,
+    stopMusic,
+    setMuted,
+    isMuted: () => muted,
+  };
+})();
 
 let snake, direction, nextDirection, food, score, highScore, level, moveInterval;
 let gameLoopId = null;
@@ -127,6 +244,7 @@ function update() {
   if (head.x === food.x && head.y === food.y) {
     score += 10;
     scoreEl.textContent = score;
+    AudioEngine.playEat();
     checkLevelUp();
     placeFood();
   } else {
@@ -140,6 +258,7 @@ function checkLevelUp() {
     level = targetLevel;
     levelEl.textContent = level;
     moveInterval = Math.max(MIN_MOVE_INTERVAL, moveInterval - LEVEL_SPEED_STEP);
+    AudioEngine.playLevelUp();
   }
 }
 
@@ -174,6 +293,7 @@ function gameLoop(timestamp) {
 }
 
 function startGame() {
+  AudioEngine.ensureContext();
   initGame();
   isRunning = true;
   isPaused = false;
@@ -184,6 +304,7 @@ function startGame() {
   lastMoveTime = 0;
   draw();
   gameLoopId = requestAnimationFrame(gameLoop);
+  AudioEngine.startMusic();
 }
 
 function togglePause() {
@@ -194,10 +315,12 @@ function togglePause() {
   if (isPaused) {
     pauseBtn.textContent = '재개';
     cancelAnimationFrame(gameLoopId);
+    AudioEngine.stopMusic();
   } else {
     pauseBtn.textContent = '일시정지';
     lastMoveTime = 0;
     gameLoopId = requestAnimationFrame(gameLoop);
+    AudioEngine.startMusic();
   }
 }
 
@@ -206,6 +329,8 @@ function endGame() {
   isPaused = false;
   pauseBtn.classList.add('hidden');
   cancelAnimationFrame(gameLoopId);
+  AudioEngine.stopMusic();
+  AudioEngine.playGameOver();
 
   if (score > highScore) {
     highScore = score;
@@ -218,6 +343,16 @@ function endGame() {
 
   addHistoryEntry(score);
   renderLeaderboard();
+}
+
+function toggleMute() {
+  AudioEngine.ensureContext();
+  const nextMuted = !AudioEngine.isMuted();
+  AudioEngine.setMuted(nextMuted);
+  muteBtn.textContent = nextMuted ? '🔇' : '🔊';
+  if (!nextMuted && isRunning && !isPaused) {
+    AudioEngine.startMusic();
+  }
 }
 
 function setDirection(dx, dy) {
@@ -294,7 +429,11 @@ canvas.addEventListener('touchend', (e) => {
 
 startBtn.addEventListener('click', startGame);
 restartBtn.addEventListener('click', startGame);
-pauseBtn.addEventListener('click', togglePause);
+pauseBtn.addEventListener('click', () => {
+  AudioEngine.playClick();
+  togglePause();
+});
+muteBtn.addEventListener('click', toggleMute);
 difficultySelect.addEventListener('change', () => syncDifficultyFrom(difficultySelect));
 difficultyRestartSelect.addEventListener('change', () => syncDifficultyFrom(difficultyRestartSelect));
 
