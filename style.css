@@ -31,9 +31,33 @@ body {
   gap: 16px;
 }
 
+.title-bar {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
+}
+
 h1 {
   font-size: 28px;
   letter-spacing: 1px;
+}
+
+#muteBtn {
+  padding: 8px 12px;
+  font-size: 16px;
+  background: #2a2a3d;
+  color: #e2e2f0;
+  box-shadow: 0 3px 0 #16161f, 0 4px 8px rgba(0, 0, 0, 0.35);
+}
+
+#muteBtn:hover {
+  background: #34344a;
+  color: #e2e2f0;
+}
+
+#muteBtn:active {
+  box-shadow: 0 1px 0 #16161f, 0 2px 4px rgba(0, 0, 0, 0.35);
 }
 
 .score-board {
@@ -154,11 +178,6 @@ button:active {
   display: flex;
   justify-content: center;
   gap: 10px;
-}
-
-#muteBtn {
-  padding: 10px 16px;
-  font-size: 18px;
 }
 
 .controls button {
