@@ -310,15 +310,14 @@ button:active {
   .page-layout {
     flex-direction: column;
     align-items: center;
+    padding: 16px 12px;
   }
 
   .leaderboard {
     width: 100%;
     max-width: 400px;
   }
-}
 
-@media (hover: none) and (pointer: coarse) {
   .dpad {
     display: grid;
   }
@@ -328,17 +327,60 @@ button:active {
   }
 }
 
-@media (max-width: 420px) {
+@media (max-width: 600px) {
+  .game-container {
+    gap: 10px;
+  }
+
+  .title-bar {
+    gap: 8px;
+  }
+
   h1 {
-    font-size: 22px;
+    font-size: 20px;
+  }
+
+  #muteBtn {
+    padding: 6px 10px;
+    font-size: 14px;
   }
 
   .score-board {
-    gap: 16px;
+    gap: 10px;
   }
 
   .score-item {
-    min-width: 80px;
-    padding: 6px 10px;
+    min-width: 70px;
+    padding: 5px 8px;
+  }
+
+  .score-item .label {
+    font-size: 10px;
+    margin-bottom: 2px;
+  }
+
+  .score-item span#score,
+  .score-item span#highScore,
+  .score-item span#level {
+    font-size: 18px;
+  }
+
+  .canvas-wrapper {
+    max-width: 78vw;
+  }
+
+  .controls button {
+    padding: 8px 18px;
+    font-size: 14px;
+  }
+
+  .dpad {
+    grid-template-columns: repeat(3, 48px);
+    grid-template-rows: repeat(2, 48px);
+    gap: 5px;
+  }
+
+  .dpad-btn {
+    font-size: 16px;
   }
 }
