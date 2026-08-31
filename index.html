@@ -1,0 +1,83 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>스네이크 게임</title>
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <div class="page-layout">
+    <div class="game-container">
+      <h1>🐍 스네이크 게임</h1>
+
+      <div class="score-board">
+        <div class="score-item">
+          <span class="label">점수</span>
+          <span id="score">0</span>
+        </div>
+        <div class="score-item">
+          <span class="label">레벨</span>
+          <span id="level">1</span>
+        </div>
+        <div class="score-item">
+          <span class="label">최고 점수</span>
+          <span id="highScore">0</span>
+        </div>
+      </div>
+
+      <div class="canvas-wrapper">
+        <canvas id="gameCanvas" width="400" height="400"></canvas>
+
+        <div id="startOverlay" class="overlay">
+          <div class="difficulty-select">
+            <label for="difficulty">난이도</label>
+            <select id="difficulty">
+              <option value="200">쉬움</option>
+              <option value="150" selected>보통</option>
+              <option value="100">어려움</option>
+              <option value="50">매우 어려움</option>
+            </select>
+          </div>
+          <button id="startBtn">게임 시작</button>
+        </div>
+
+        <div id="gameOverOverlay" class="overlay hidden">
+          <p class="game-over-text">게임 오버</p>
+          <p class="final-score">최종 점수: <span id="finalScore">0</span></p>
+          <div class="difficulty-select">
+            <label for="difficultyRestart">난이도</label>
+            <select id="difficultyRestart">
+              <option value="200">쉬움</option>
+              <option value="150" selected>보통</option>
+              <option value="100">어려움</option>
+              <option value="50">매우 어려움</option>
+            </select>
+          </div>
+          <button id="restartBtn">다시 시작</button>
+        </div>
+      </div>
+
+      <div class="controls">
+        <button id="pauseBtn" class="hidden">일시정지</button>
+      </div>
+
+      <div id="dpad" class="dpad">
+        <button class="dpad-btn dpad-up" data-dx="0" data-dy="-1" aria-label="위로">▲</button>
+        <button class="dpad-btn dpad-left" data-dx="-1" data-dy="0" aria-label="왼쪽으로">◀</button>
+        <button class="dpad-btn dpad-right" data-dx="1" data-dy="0" aria-label="오른쪽으로">▶</button>
+        <button class="dpad-btn dpad-down" data-dx="0" data-dy="1" aria-label="아래로">▼</button>
+      </div>
+
+      <p class="hint">방향키 또는 화면 스와이프로 뱀을 조종하세요</p>
+    </div>
+
+    <aside class="leaderboard">
+      <h2>🏆 TOP 5</h2>
+      <ol id="leaderboardList" class="leaderboard-list"></ol>
+    </aside>
+  </div>
+
+  <script src="main.js"></script>
+</body>
+</html>
