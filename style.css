@@ -211,6 +211,13 @@ button:active {
   gap: 8px;
 }
 
+.copyright {
+  margin-top: 16px;
+  font-size: 11px;
+  color: #6a6a8a;
+  text-align: center;
+}
+
 .leaderboard-list li {
   display: flex;
   align-items: center;
